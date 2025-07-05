@@ -1,7 +1,5 @@
 package ar.edu.utn.frc.tup.piii.dto;
 
-
-import ar.edu.utn.frc.tup.piii.models.entities.PuestoJuego;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,12 +17,12 @@ public class ReservaDTO {
     private Long id;
     private ClienteDTO cliente;
     private VideojuegoDTO videojuego;
-    private PuestoJuegoDTO puestojuego;
+    private PuestoJuegoDTO puestoJuego; // Corregido: era puestojuego
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime fechaHora;
 
     private Integer duracionMinutos;
-    
-    private String observacion;
+
+    private String observaciones; // Corregido: era observacion
 }

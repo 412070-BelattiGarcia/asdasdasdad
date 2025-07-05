@@ -71,4 +71,12 @@ public class ReservaController {
                     content = @Content(schema = @Schema(implementation = ErrorApi.class))),
             @ApiResponse(responseCode = "409", description = "Conflicto con reglas de negocio",
                     content = @Content(schema = @Schema(implementation = ErrorApi.class))),
-            @ApiResponse(responseCode = "500",
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor",
+                    content = @Content(schema = @Schema(implementation = ErrorApi.class)))
+    })
+    @PostMapping
+    public ResponseEntity<ReservaDTO> createReserva(@Valid @RequestBody ReservaRequestDTO reservaRequestDTO) {
+        ReservaDTO reservaCreada = reservaService.create(reservaRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(reservaCreada);
+    }
+}

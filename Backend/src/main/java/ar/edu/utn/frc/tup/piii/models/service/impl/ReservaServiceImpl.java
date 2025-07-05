@@ -15,7 +15,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -29,7 +28,6 @@ public class ReservaServiceImpl implements ReservaService {
     private final ClienteService clienteService;
     private final PuestoJuegoService puestoJuegoService;
     private final VideoJuegoService videoJuegoService;
-    private final ReservaService reservaService;
     private final ReservaRepository reservaRepository;
 
     @Autowired
@@ -38,12 +36,11 @@ public class ReservaServiceImpl implements ReservaService {
             ClienteService clienteService,
             PuestoJuegoService puestoJuegoService,
             VideoJuegoService videoJuegoService,
-            ReservaService reservaService, ReservaRepository reservaRepository){
+            ReservaRepository reservaRepository) {
         this.modelMapper = modelMapper;
         this.clienteService = clienteService;
         this.puestoJuegoService = puestoJuegoService;
         this.videoJuegoService = videoJuegoService;
-        this.reservaService = reservaService;
         this.reservaRepository = reservaRepository;
     }
 
@@ -51,78 +48,83 @@ public class ReservaServiceImpl implements ReservaService {
     private static final LocalTime HORA_CIERRE = LocalTime.of(22, 0);
     private static final List<Integer> DURACIONES_PERMITIDAS = Arrays.asList(30, 60, 90, 120);
 
-
     @Override
     public List<ReservaDTO> findAll() {
-        return reservaService.findAll().stream()
-                .map(reserva -> modelMapper.map(reserva,ReservaDTO.class))
+        return reservaRepository.findAll().stream()
+                .map(reserva -> modelMapper.map(reserva, ReservaDTO.class))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<ReservaDTO> findByFilter(Long clienteId, Long videoJuegoId, Long puestoJuegoId, LocalDateTime fechaHora) {
-        List<Reserva> reservas = reservaRepository.findByFilters(clienteId, videoJuegoId, puestoJuegoId,fechaHora);
+        List<Reserva> reservas = reservaRepository.findByFilters(clienteId, videoJuegoId, puestoJuegoId, fechaHora);
         return reservas.stream()
-                .map(reserva -> modelMapper.map(reserva,ReservaDTO.class))
+                .map(reserva -> modelMapper.map(reserva, ReservaDTO.class))
                 .collect(Collectors.toList());
     }
 
     @Override
     public ReservaDTO findById(Long id) {
-        ReservaDTO reserva = reservaService.findById(id).ma
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada con ID: " + id));
+        return modelMapper.map(reserva, ReservaDTO.class);
     }
 
     @Override
     public ReservaDTO create(ReservaRequestDTO reservaRequestDTO) {
-
+        // Validar reglas de negocio
         validarReserva(reservaRequestDTO);
 
+        // Obtener entidades relacionadas
         Cliente cliente = clienteService.findByEntity(reservaRequestDTO.getClienteId());
         Videojuego videojuego = videoJuegoService.findByEntity(reservaRequestDTO.getVideojuegoId());
         PuestoJuego puestoJuego = puestoJuegoService.findByEntity(reservaRequestDTO.getPuestoId());
 
-        ReservaRequestDTO reserva = new ReservaRequestDTO();
-        reserva.setClienteId(cliente.getId());
-        reserva.setVideojuegoId(videojuego.getId());
-        reserva.setPuestoId(puestoJuego.getId());
+        // Crear nueva reserva
+        Reserva reserva = new Reserva();
+        reserva.setCliente(cliente);
+        reserva.setVideojuego(videojuego);
+        reserva.setPuesto(puestoJuego);
         reserva.setFechaHora(reservaRequestDTO.getFechaHora());
         reserva.setDuracionMinutos(reservaRequestDTO.getDuracionMinutos());
         reserva.setObservaciones(reservaRequestDTO.getObservaciones());
 
-        ReservaDTO reservaGuardada = reservaService.create(reserva);
+        // Guardar reserva
+        Reserva reservaGuardada = reservaRepository.save(reserva);
 
-        return modelMapper.map(reserva,ReservaDTO.class);
+        // Retornar DTO
+        return modelMapper.map(reservaGuardada, ReservaDTO.class);
     }
 
     private void validarReserva(ReservaRequestDTO reservaRequestDTO) {
-
+        // Validar horario de funcionamiento
         LocalTime horaReserva = reservaRequestDTO.getFechaHora().toLocalTime();
         LocalTime horaFin = horaReserva.plusMinutes(reservaRequestDTO.getDuracionMinutos());
 
         if (horaReserva.isBefore(HORA_APERTURA) || horaFin.isAfter(HORA_CIERRE)) {
-            throw new RuntimeException("La reserva debe estar dentro del horario permitido (10:00 - 22:00");
+            throw new RuntimeException("La reserva debe estar dentro del horario permitido (10:00 - 22:00)");
         }
 
+        // Validar duración permitida
         if (!DURACIONES_PERMITIDAS.contains(reservaRequestDTO.getDuracionMinutos())) {
-            throw new RuntimeException("La duración debe ser de 30, 60, 90, 120 minutos");
+            throw new RuntimeException("La duración debe ser de 30, 60, 90 o 120 minutos");
         }
 
+        // Validar que el cliente no tenga otra reserva el mismo día
         if (reservaRepository.existsReservaByClienteAndDate(
                 reservaRequestDTO.getClienteId(),
-                reservaRequestDTO.getFechaHora())){
+                reservaRequestDTO.getFechaHora())) {
             throw new RuntimeException("El cliente ya tiene una reserva para ese día");
         }
 
+        // Validar solapamiento de reservas en el mismo puesto
         LocalDateTime fechaHoraFin = reservaRequestDTO.getFechaHora()
                 .plusMinutes(reservaRequestDTO.getDuracionMinutos());
         if (reservaRepository.existsOverlappingReserva(
                 reservaRequestDTO.getPuestoId(),
                 reservaRequestDTO.getFechaHora(),
-                fechaHoraFin
-        )){
+                fechaHoraFin)) {
             throw new RuntimeException("El puesto ya está reservado en ese horario");
         }
-
     }
-
 }

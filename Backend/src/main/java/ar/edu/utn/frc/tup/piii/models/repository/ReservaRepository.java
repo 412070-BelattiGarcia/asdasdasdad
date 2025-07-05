@@ -10,8 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface ReservaRepository {
-
+public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
     @Query("SELECT r FROM Reserva r WHERE " +
             "(:clienteId IS NULL OR r.cliente.id = :clienteId) AND " +
@@ -29,12 +28,11 @@ public interface ReservaRepository {
     boolean existsReservaByClienteAndDate(@Param("clienteId") Long clienteId,
                                           @Param("fechaHora") LocalDateTime fechaHora);
 
+    // Consulta corregida para validar solapamiento de reservas
     @Query("SELECT COUNT(r) > 0 FROM Reserva r WHERE " +
             "r.puesto.id = :puestoId AND " +
-            "((r.fechaHora <= :fechaHora AND :fechaHora < r.fechaHora + INTERVAL r.duracionMinutos MINUTE) OR " +
-            "(r.fechaHora < :fechaHoraFin AND :fechaHoraFin <= r.fechaHora + INTERVAL r.duracionMinutos MINUTE) OR " +
-            "(r.fechaHora >= :fechaHora AND r.fechaHora < :fechaHoraFin))")
-
+            "((r.fechaHora < :fechaHoraFin AND " +
+            "DATEADD(MINUTE, r.duracionMinutos, r.fechaHora) > :fechaHora))")
     boolean existsOverlappingReserva(@Param("puestoId") Long puestoId,
                                      @Param("fechaHora") LocalDateTime fechaHora,
                                      @Param("fechaHoraFin") LocalDateTime fechaHoraFin);

@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "reserva")
-
 public class Reserva {
 
     @Id
@@ -35,7 +34,7 @@ public class Reserva {
     @Column(name = "fechaHora", nullable = false)
     private LocalDateTime fechaHora; // obligatorio
 
-    @Column(name = "duracion", nullable = false)
+    @Column(name = "duracionMinutos", nullable = false) // Corregido: era duracion
     private Integer duracionMinutos; // obligatorio
 
     @Column(name = "observaciones")
