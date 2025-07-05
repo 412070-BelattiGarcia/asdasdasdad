@@ -1,1 +1,148 @@
-<p>reserva-form works!</p>
+<div class="max-w-2xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+  <div class="bg-blue-600 px-6 py-4">
+    <h2 class="text-xl font-bold text-white">📝 Nueva Reserva</h2>
+  </div>
+
+  <div class="p-6">
+    <form #reservaFormRef="ngForm" (ngSubmit)="onSubmit()">
+      <!-- Cliente -->
+      <div class="mb-6">
+        <label for="cliente" class="block text-sm font-medium text-gray-700 mb-2">
+          Cliente *
+        </label>
+        <select
+          id="cliente"
+          name="cliente_id"
+          [(ngModel)]="reservaForm.cliente_id"
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <option value="0">Seleccionar cliente</option>
+          <option *ngFor="let cliente of clientes" [value]="cliente.id">
+            {{ cliente.nombreCompleto }} ({{ cliente.email }})
+          </option>
+        </select>
+      </div>
+
+      <!-- Videojuego -->
+      <div class="mb-6">
+        <label for="videojuego" class="block text-sm font-medium text-gray-700 mb-2">
+          Videojuego *
+        </label>
+        <select
+          id="videojuego"
+          name="videojuego_id"
+          [(ngModel)]="reservaForm.videojuego_id"
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <option value="0">Seleccionar videojuego</option>
+          <option *ngFor="let videojuego of videojuegos" [value]="videojuego.id">
+            {{ videojuego.titulo }} ({{ videojuego.genero }})
+          </option>
+        </select>
+      </div>
+
+      <!-- Puesto -->
+      <div class="mb-6">
+        <label for="puesto" class="block text-sm font-medium text-gray-700 mb-2">
+          Puesto *
+        </label>
+        <select
+          id="puesto"
+          name="puesto_id"
+          [(ngModel)]="reservaForm.puesto_id"
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <option value="0">Seleccionar puesto</option>
+          <option *ngFor="let puesto of puestos" [value]="puesto.id">
+            {{ puesto.nombre }} ({{ puesto.tipo }})
+          </option>
+        </select>
+      </div>
+
+      <!-- Fecha y Hora -->
+      <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="fecha" class="block text-sm font-medium text-gray-700 mb-2">
+            Fecha *
+          </label>
+          <input
+            type="date"
+            id="fecha"
+            name="fecha"
+            [(ngModel)]="fechaInput"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+        <div>
+          <label for="hora" class="block text-sm font-medium text-gray-700 mb-2">
+            Hora *
+          </label>
+          <input
+            type="time"
+            id="hora"
+            name="hora"
+            [(ngModel)]="horaInput"
+            min="10:00"
+            max="22:00"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+      </div>
+
+      <!-- Duración -->
+      <div class="mb-6">
+        <label for="duracion" class="block text-sm font-medium text-gray-700 mb-2">
+          Duración (minutos) *
+        </label>
+        <select
+          id="duracion"
+          name="duracionMinutos"
+          [(ngModel)]="reservaForm.duracionMinutos"
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <option *ngFor="let duracion of duracionesDisponibles" [value]="duracion">
+            {{ duracion }} minutos
+          </option>
+        </select>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="mb-6">
+        <label for="observaciones" class="block text-sm font-medium text-gray-700 mb-2">
+          Observaciones
+        </label>
+        <textarea
+          id="observaciones"
+          name="observaciones"
+          [(ngModel)]="reservaForm.observaciones"
+          rows="3"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="Comentarios adicionales..."></textarea>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="error" class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
+        {{ error }}
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex justify-between">
+        <button
+          type="button"
+          (click)="resetForm()"
+          class="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+          Limpiar
+        </button>
+
+        <button
+          type="submit"
+          [disabled]="!isFormValid() || loading"
+          class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
+          <span *ngIf="loading">Guardando...</span>
+          <span *ngIf="!loading">Crear Reserva</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
