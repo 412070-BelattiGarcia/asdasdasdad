@@ -119,4 +119,8 @@ export class ReservaList implements OnInit {
     }
     return `${minutes}m`;
   }
+
+  trackByReservaId(index: number, reserva: Reserva): number {
+    return reserva.id;
+  }
 }
